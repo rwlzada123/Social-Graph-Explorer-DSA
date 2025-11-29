@@ -1,0 +1,8 @@
+{
+    "python.testing.cwd": "${workspaceFolder}",
+    "terminal.integrated.cwd": "${workspaceFolder}",
+    "python.envFile": "${workspaceFolder}/.env",
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}"
+    ]
+}
