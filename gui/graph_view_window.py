@@ -1,4 +1,5 @@
 # gui/graph_view_window.py
+from PyQt5.QtWidgets import QMessageBox, QComboBox, QPushButton
 
 from PyQt5.QtWidgets import (
     QDialog, QVBoxLayout, QLabel, QTextEdit, QHBoxLayout,
@@ -120,12 +121,10 @@ class GraphViewWindow(QDialog):
         title.setStyleSheet("font-size: 22px; font-weight: bold;")
         root.addWidget(title)
 
-        tabs = QTabWidget()
-        tabs.addTab(self._tab_adj_list(), "Adjacency List")
-        tabs.addTab(self._tab_adj_matrix(), "Adjacency Matrix")
-        tabs.addTab(self._tab_stats(), "Graph Statistics")
+        self.tabs = QTabWidget()
+        root.addWidget(self.tabs)
 
-        root.addWidget(tabs)
+        self._rebuild_tabs()
         self.setLayout(root)
 
     # ------------------------------------------------------------
@@ -227,6 +226,86 @@ class GraphViewWindow(QDialog):
         layout.addWidget(details)
         w.setLayout(layout)
         return w
+    # ------------------------------------------------------------
+    # TAB 4 — Delete User
+    # ------------------------------------------------------------
+    def _tab_delete_user(self):
+        w = QWidget()
+        layout = QVBoxLayout()
+        layout.setSpacing(12)
+
+        label = QLabel("Delete a User From the Graph")
+        label.setStyleSheet("font-size: 18px; font-weight: bold;")
+        label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(label)
+
+        # Dropdown of users
+        self.user_dropdown = QComboBox()
+        self.user_dropdown.addItems(sorted(self.graph.get_all_users()))
+        self.user_dropdown.setStyleSheet("font-size: 14px; padding: 6px;")
+        layout.addWidget(self.user_dropdown)
+
+        # Delete button
+        btn_delete = QPushButton("🗑️ Delete Selected User")
+        btn_delete.setStyleSheet("""
+            QPushButton {
+                background-color: #ffb3b3;
+                border-radius: 10px;
+                padding: 10px;
+                font-size: 15px;
+                font-weight: bold;
+                color: #5a0000;
+                border: 2px solid #ff7a7a;
+            }
+            QPushButton:hover {
+                background-color: #ffcccc;
+            }
+        """)
+        btn_delete.clicked.connect(self._delete_selected_user)
+        layout.addWidget(btn_delete)
+
+        # Expand space below
+        layout.addStretch()
+        w.setLayout(layout)
+        return w
+    
+    def _delete_selected_user(self):
+        username = self.user_dropdown.currentText()
+
+        # Confirmation dialog
+        reply = QMessageBox.question(
+            self,
+            "Confirm Deletion",
+            f"Are you sure you want to delete '{username}'?\nThis cannot be undone.",
+            QMessageBox.Yes | QMessageBox.No
+        )
+
+        if reply != QMessageBox.Yes:
+            return
+
+        # Perform deletion in backend
+        self.graph.delete_user(username)
+        self.graph.save()
+        self._refresh_tabs()
+        # Refresh graph preview — adjacency list & matrix
+        # (Tabs will rebuild when reopened)
+        self.user_dropdown.clear()
+        self.user_dropdown.addItems(sorted(self.graph.get_all_users()))
+        self._refresh_tabs()
+        QMessageBox.information(
+            self,
+            "User Deleted",
+            f"'{username}' has been removed from the graph."
+        )
+    def _refresh_tabs(self):
+        self.tabs.clear()
+        self._rebuild_tabs()
+    def _rebuild_tabs(self):
+        self.tabs.clear()
+        self.tabs.addTab(self._tab_adj_list(), "Adjacency List")
+        self.tabs.addTab(self._tab_adj_matrix(), "Adjacency Matrix")
+        self.tabs.addTab(self._tab_stats(), "Graph Statistics")
+        self.tabs.addTab(self._tab_delete_user(), "Delete User")
 
     # ------------------------------------------------------------
     # THEME

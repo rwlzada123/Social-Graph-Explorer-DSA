@@ -127,12 +127,14 @@ class MainWindow(QMainWindow):
 
         add_button("➕ Add User", self.open_add_user)
         add_button("👥 Add Friendship", self.open_add_friend)
+        
         add_button("🔎 BFS Traversal", self.open_bfs)
         add_button("🧭 DFS Traversal", self.open_dfs)
         add_button("🌐 Community Detection (DSU)", self.open_community)
         add_button("⭐ Friend Recommendations", self.open_recommendation)
         add_button("📊 Visualize Graph", self.open_graph_view)
-
+        add_button("❌ Delete Friendship", self.open_delete_friendship)
+        
         # Centering wrapper
         wrapper = QHBoxLayout()
         wrapper.setContentsMargins(40, 0, 40, 0)
@@ -178,3 +180,8 @@ class MainWindow(QMainWindow):
     def open_graph_view(self):
         GraphViewWindow(self.graph).exec_()
 
+    def open_delete_friendship(self):
+        from gui.delete_friend_dialog import DeleteFriendDialog
+        dlg = DeleteFriendDialog(self.graph)
+        if dlg.exec_():
+            self._refresh_and_save()

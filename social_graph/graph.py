@@ -74,6 +74,35 @@ class Graph:
         vid = self._user_to_id[v]
         self._adj[uid].discard(vid)
         self._adj[vid].discard(uid)
+    def delete_user(self, username: str) -> None:
+        if username not in self._user_to_id:
+            return
+
+        uid = self._user_to_id[username]
+
+        # 1. Remove the user from mapping structures
+        del self._user_to_id[username]
+        self._id_to_user.pop(uid)
+        self._adj.pop(uid)
+
+        # 2. Rebuild ID mappings because indices shifted!
+        new_user_to_id = {}
+        for new_id, name in enumerate(self._id_to_user):
+            new_user_to_id[name] = new_id
+        self._user_to_id = new_user_to_id
+
+        # 3. Fix adjacency lists: remove deleted user & shift indices > uid
+        new_adj = []
+        for neighbors in self._adj:
+            updated = set()
+            for n in neighbors:
+                if n == uid:
+                    continue  # remove deleted user
+                # shift indices
+                updated.add(n - 1 if n > uid else n)
+            new_adj.append(updated)
+
+        self._adj = new_adj
 
     # =====================================================================
     # INTERNAL ACCESS HELPERS FOR BFS/DFS/Canvas

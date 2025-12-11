@@ -145,3 +145,14 @@ class GraphCanvas(QGraphicsView):
 
     def mark_path(self, uid):
         self.nodes[uid].item.setBrush(PATH_NODE)
+    # ---------------------------------------------------------
+    # DELETE USER
+    # ---------------------------------------------------------
+    def delete_user_visual(self, username: str):
+        # 1. Clear scene and internal structures
+        self.scene.clear()
+        self.nodes = {}
+        self.edges = []
+
+        # 2. Rebuild the graph
+        self._build_graph()
