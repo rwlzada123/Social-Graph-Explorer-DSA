@@ -23,77 +23,37 @@ class DFSResult:
         self.tout = tout
         self.time_ms = time_ms
 
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "order": self.order,
-            "parent": self.parent,
-            "depth": self.depth,
-            "tin": self.tin,
-            "tout": self.tout,
-            "time_ms": self.time_ms,
-        }
-
 
 # =====================================================================
-# MAIN DFS FUNCTION
+# MAIN DFS TRAVERSAL (Tree + timestamps)
 # =====================================================================
-def dfs_traversal(
-    graph: Graph,
-    start_user: str,
-    return_full: bool = True
-) -> DFSResult | List[str]:
-
-    #Perform DFS on the graph starting from a given user.
-
-    #Parameters:
-        #graph (Graph): the social graph
-        #start_user (str): the root of the DFS
-        #return_full (bool): return DFSResult or only traversal order
-
-    #Returns:
-        #DFSResult or List[str]
+def dfs_traversal(graph: Graph, start_user: str, return_full: bool = True):
 
     start_time = perf_counter()
-
-    # -----------------------------------------------------
-    # Validate
-    # -----------------------------------------------------
-    if graph is None:
-        raise ValueError("Graph cannot be None.")
 
     if not graph.has_user(start_user):
         return DFSResult([], {}, {}, {}, {}, 0) if return_full else []
 
-    # -----------------------------------------------------
-    # Convert to internal ID
-    # -----------------------------------------------------
     start_id = graph.get_user_id(start_user)
 
-    # Local fast references
     get_neighbors = graph.get_neighbors
     get_name = graph.get_user_name
 
     visited = set()
-    parent: Dict[int, Optional[int]] = {}
-    depth: Dict[int, int] = {}
-    order_ids: List[int] = []
+    parent = {start_id: None}
+    depth = {}
+    order_ids = []
 
-    # Timestamps (optional advanced learning feature)
-    tin: Dict[int, int] = {}
-    tout: Dict[int, int] = {}
-    timer = [1]  # using list so it is mutable in nested function
+    tin, tout = {}, {}
+    timer = [1]
 
-    # -----------------------------------------------------
-    # DFS RECURSION
-    # -----------------------------------------------------
-    def dfs(u: int, d: int):
+    def dfs(u, d):
         visited.add(u)
         depth[u] = d
         order_ids.append(u)
         tin[u] = timer[0]
         timer[0] += 1
 
-        # deterministic sorted traversal
         for v in sorted(get_neighbors(u), key=get_name):
             if v not in visited:
                 parent[v] = u
@@ -102,41 +62,22 @@ def dfs_traversal(
         tout[u] = timer[0]
         timer[0] += 1
 
-    parent[start_id] = None
     dfs(start_id, 0)
 
-    # -----------------------------------------------------
-    # Build named output
-    # -----------------------------------------------------
     order_names = [get_name(n) for n in order_ids]
-    parent_named = {
-        get_name(node): (
-            None if par is None else get_name(par)
-        )
-        for node, par in parent.items()
-    }
-    depth_named = {get_name(n): depth[n] for n in depth}
-    tin_named = {get_name(n): tin[n] for n in tin}
-    tout_named = {get_name(n): tout[n] for n in tout}
+    parent_named = {get_name(k): (None if v is None else get_name(v)) for k, v in parent.items()}
+    depth_named = {get_name(k): v for k, v in depth.items()}
+    tin_named = {get_name(k): v for k, v in tin.items()}
+    tout_named = {get_name(k): v for k, v in tout.items()}
 
     elapsed = (perf_counter() - start_time) * 1000
 
-    result = DFSResult(
-        order=order_names,
-        parent=parent_named,
-        depth=depth_named,
-        tin=tin_named,
-        tout=tout_named,
-        time_ms=elapsed,
-    )
-
-    return result if return_full else order_names
+    return DFSResult(order_names, parent_named, depth_named, tin_named, tout_named, elapsed)
 
 
 # =====================================================================
-# DFS PATH FINDER (Used for DFSWindow)
+# DFS PATH FINDER (USED BY DFS WINDOW)
 # =====================================================================
-
 class DFSPathResult:
     def __init__(self, path, visited_order, distances):
         self.path = path
@@ -145,8 +86,7 @@ class DFSPathResult:
 
 
 def dfs_shortest_path(graph, start_user, target_user, return_full_result=True):
-    #Attempts to find a path from start_user to target_user using DFS.
-    #Returns DFSPathResult compatible with BFSWindow/DFSWindow expectations.
+    print("🔥 dfs_shortest_path CALLED")
 
     if not graph.has_user(start_user) or not graph.has_user(target_user):
         return DFSPathResult([], [], {})
@@ -154,53 +94,43 @@ def dfs_shortest_path(graph, start_user, target_user, return_full_result=True):
     start = graph.get_user_id(start_user)
     target = graph.get_user_id(target_user)
 
-    visited = set()
-    visited_order = []
-    parent = {}
-    distances = {start_user: 0}
-
-    found = [False]
-
     get_neighbors = graph.get_neighbors
     get_name = graph.get_user_name
 
-    # ---------------------------------------------------------
-    # DFS SEARCH
-    # ---------------------------------------------------------
-    def dfs(u):
-        if found[0]:
-            return
+    visited = set()
+    path = []
+    all_paths = []  # store every valid path
 
+    # Full DFS that finds ALL paths
+    def dfs(u):
         visited.add(u)
-        visited_order.append(get_name(u))
+        path.append(u)
 
         if u == target:
-            found[0] = True
-            return
+            all_paths.append(path.copy())
+        else:
+            for v in get_neighbors(u):
+                if v not in visited:
+                    dfs(v)
 
-        for v in sorted(get_neighbors(u), key=get_name):
-            if v not in visited:
-                parent[v] = u
-                distances[get_name(v)] = distances[get_name(u)] + 1
-                dfs(v)
-                if found[0]:
-                    return
+        # backtrack
+        visited.remove(u)
+        path.pop()
 
-    parent[start] = None
+    # Run full DFS
     dfs(start)
 
-    # ---------------------------------------------------------
-    # Build Path
-    # ---------------------------------------------------------
-    if not found[0]:
-        return DFSPathResult([], visited_order, distances)
+    # If no path found
+    if not all_paths:
+        return DFSPathResult([], [], {})
 
-    path = []
-    cur = target
-    while cur is not None:
-        path.append(get_name(cur))
-        cur = parent.get(cur)
+    # Choose the SHORTEST path among all found
+    shortest = min(all_paths, key=len)
 
-    path.reverse()
+    # Convert to names
+    shortest_named = [get_name(n) for n in shortest]
 
-    return DFSPathResult(path, visited_order, distances)
+    # visited_order for animation = shortest path only
+    visited_order_named = shortest_named.copy()
+
+    return DFSPathResult(shortest_named, visited_order_named, {})

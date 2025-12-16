@@ -1,5 +1,8 @@
+Raihana Walizada - 534532
+Juwairiya Haroon - 505494
+Muskan Ejaz - 522695
 # Social Graph Explorer
-
+the link for GitHub is: https://github.com/rwlzada123/Social-Graph-Explorer-DSA
 This project is a Python-based Social Graph Explorer built using data structures and algorithms such as Graphs, BFS, DFS, and Disjoint Set Union (DSU). It allows users to add people, create friendships, visualize graph structures, detect communities, perform traversals, and receive friend recommendations. The application includes a colorful graphical interface made with PyQt5, where each feature is displayed in its own window. The backend algorithms are fully tested using pytest to ensure correctness. This project was developed as part of our DSA course to demonstrate practical implementation of graph algorithms and interactive UI design.
 
 The Structure for the project is as follows
