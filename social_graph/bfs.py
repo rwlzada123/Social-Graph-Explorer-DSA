@@ -8,8 +8,6 @@ from .graph import Graph
 # Result Container (unchanged)
 # =====================================================================
 class BFSResult:
-    """Structured result for BFS execution with GUI support."""
-
     def __init__(
         self,
         path: List[str],
@@ -27,7 +25,7 @@ class BFSResult:
         self.reachable = reachable  # False = no possible path
 
     def to_dict(self) -> Dict[str, Any]:
-        """Convert result to JSON-friendly dict."""
+        #Convert result to JSON-friendly dict.
         return {
             "path": self.path,
             "visited_order": self.visited_order,

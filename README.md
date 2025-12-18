@@ -14,6 +14,7 @@ SocialGraphExplorer/
 │   ├── bfs.py
 │   ├── dfs.py
 │   ├── dsu.py
+│   ├── dfs_iterative.py
 │   └── __init__.py
 │
 ├── gui/
@@ -31,6 +32,8 @@ SocialGraphExplorer/
 │   └── dfs_window.py
 │
 ├── main.py                      ← main launcher file (outside gui)
-├── tests/                       ← for testing 
+├── tests/                       ← for testing
+├── performance_test.py
+ 
 ├── graph_data.json              ← for saving the data entered
 └── README.md

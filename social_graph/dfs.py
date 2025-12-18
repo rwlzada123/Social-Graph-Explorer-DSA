@@ -86,7 +86,7 @@ class DFSPathResult:
 
 
 def dfs_shortest_path(graph, start_user, target_user, return_full_result=True):
-    print("🔥 dfs_shortest_path CALLED")
+    print(" dfs_shortest_path CALLED")
 
     if not graph.has_user(start_user) or not graph.has_user(target_user):
         return DFSPathResult([], [], {})
